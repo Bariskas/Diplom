@@ -25,7 +25,7 @@ bool Player::loadVideo() {
 	capture.open(0);
 	if (capture.isOpened())
 	{
-		frameRate = 1; // static_cast<int>(capture.get(CV_CAP_PROP_FPS));
+		frameRate = 60; // static_cast<int>(capture.get(CV_CAP_PROP_FPS));
 		return true;
 	}
 	else
@@ -43,6 +43,10 @@ void Player::Play()
 			stop = false;
 		}
 		start(LowPriority);
+	}
+	else
+	{
+		stop = true;
 	}
 }
 
@@ -70,11 +74,6 @@ void Player::run()
 	}
 }
 
-void Player::Stop()
-{
-	stop = true;
-}
-
 bool Player::msleep(int ms) {
 	LONGLONG ns = ms * 1000 * 1000;
 
@@ -96,6 +95,12 @@ bool Player::msleep(int ms) {
 	CloseHandle(timer);
 	/* Slept without problems */
 	return TRUE;
+}
+
+
+void Player::Stop()
+{
+	stop = true;
 }
 
 bool Player::isStopped() const {
