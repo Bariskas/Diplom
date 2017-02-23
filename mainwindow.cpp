@@ -9,7 +9,13 @@ MainWindow::MainWindow(QWidget *parent)
 		this, SLOT(updatePlayerUI(QImage)));
 	ui->setupUi(this);
 
-	myPlayer->loadVideo();
+	if (!myPlayer->loadVideo())
+	{
+		QMessageBox msgBox;
+		msgBox.setText("Webcam not found");
+		msgBox.exec();
+	}
+
 }
 
 MainWindow::~MainWindow()
