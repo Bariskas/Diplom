@@ -16,7 +16,7 @@ public:
 	~MainWindow();
 
 private slots:
-	//Display video frame in player UI
+	//Display video m_frame in player UI
 	void updatePlayerUI(QImage img);
 	// Slot for the play push button.
 	void on_pushButton_2_clicked();

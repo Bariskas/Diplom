@@ -8,13 +8,14 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
+#include <functional>
 
 class Player : public QThread
 {
 	Q_OBJECT
 
 signals :
-	//Signal to output frame to be displayed
+	//Signal to output m_frame to be displayed
 	void processedImage(const QImage &image);
 
 public:
@@ -36,14 +37,22 @@ protected:
 	bool msleep(int ms);
 
 private:
-	bool stop;
-	QMutex mutex;
-	QWaitCondition condition;
-	cv::Mat frame;
-	int frameRate;
-	cv::VideoCapture capture;
-	cv::Mat RGBframe;
-	QImage img;
+	void Player::applyFunctionToAllPixels(std::function<void(cv::Vec3b)> functionToPerform);
+	void deleteBlueColor();
+	void deleteGreenColor();
+
+private:
+	bool m_stop;
+	QMutex m_mutex;
+	QWaitCondition m_condition;
+	cv::Mat m_frame;
+	int m_frameRate;
+	cv::VideoCapture m_capture;
+	cv::Mat m_RGBframe;
+	QImage m_img;
+
+	const int RGB_BLUE_INDEX = 2;
+	const int RGB_GREEN_INDEX = 2;
 };
 
 #endif // PLAYER_H

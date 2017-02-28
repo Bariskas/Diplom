@@ -8,24 +8,25 @@ using namespace cv;
 Player::Player(QObject *parent)
 	: QThread(parent)
 {
-	stop = true;
+	m_stop = true;
 }
 
 Player::~Player()
 {
-	mutex.lock();
-	stop = true;
-	capture.release();
-	condition.wakeOne();
-	mutex.unlock();
+	m_mutex.lock();
+	m_stop = true;
+	m_capture.release();
+	m_condition.wakeOne();
+	m_mutex.unlock();
 	wait();
 }
 
-bool Player::loadVideo() {
-	capture.open(0);
-	if (capture.isOpened())
+bool Player::loadVideo()
+{
+	m_capture.open(0);
+	if (m_capture.isOpened())
 	{
-		frameRate = 60; // static_cast<int>(capture.get(CV_CAP_PROP_FPS));
+		m_frameRate = 60; // static_cast<int>(m_capture.get(CV_CAP_PROP_FPS));
 		return true;
 	}
 	else
@@ -40,41 +41,44 @@ void Player::Play()
 	{
 		if (isStopped()) 
 		{
-			stop = false;
+			m_stop = false;
 		}
 		start(LowPriority);
 	}
 	else
 	{
-		stop = true;
+		m_stop = true;
 	}
 }
 
 void Player::run()
 {
-	int delay = (1000 / frameRate);
-	while (!stop) {
-		if (!capture.read(frame))
+	int delay = (1000 / m_frameRate);
+	while (!m_stop) {
+		if (!m_capture.read(m_frame))
 		{
-			stop = true;
+			m_stop = true;
 		}
-		if (frame.channels() == 3) {
-			cv::cvtColor(frame, RGBframe, CV_BGR2RGB);
-			img = QImage(static_cast<const uchar*>(RGBframe.data),
-				RGBframe.cols, RGBframe.rows, QImage::Format_RGB888);
+		if (m_frame.channels() == 3) {
+			cv::cvtColor(m_frame, m_RGBframe, CV_BGR2RGB);
+			deleteBlueColor();
+			deleteGreenColor();
+			m_img = QImage(static_cast<const uchar*>(m_RGBframe.data),
+				m_RGBframe.cols, m_RGBframe.rows, QImage::Format_RGB888);
 		}
 		else
 		{
-			img = QImage(static_cast<const uchar*>(frame.data),
-				frame.cols, frame.rows, QImage::Format_Indexed8);
+			m_img = QImage(static_cast<const uchar*>(m_frame.data),
+				m_frame.cols, m_frame.rows, QImage::Format_Indexed8);
 		}
-		emit processedImage(img);
+		emit processedImage(m_img);
 		Sleep(static_cast<DWORD>(delay));
 		//this->msleep(delay);
 	}
 }
 
-bool Player::msleep(int ms) {
+bool Player::msleep(int ms)
+{
 	LONGLONG ns = ms * 1000 * 1000;
 
 	/* Declarations */
@@ -100,9 +104,36 @@ bool Player::msleep(int ms) {
 
 void Player::Stop()
 {
-	stop = true;
+	m_stop = true;
 }
 
-bool Player::isStopped() const {
-	return this->stop;
+bool Player::isStopped() const 
+{
+	return this->m_stop;
+}
+
+void Player::deleteBlueColor()
+{
+	applyFunctionToAllPixels([&](Vec3b pixel) { pixel[RGB_BLUE_INDEX] = 0; });
+}
+
+void Player::deleteGreenColor()
+{
+	applyFunctionToAllPixels([&](Vec3b pixel) { pixel[RGB_GREEN_INDEX] = 0; });
+}
+
+// TODO: доделать функцию
+void Player::applyFunctionToAllPixels(function<void(Vec3b)> functionToPerform)
+{
+	for (auto y = 0; y < m_RGBframe.rows; y++)
+	{
+		for (int x = 0; x < m_RGBframe.cols; x++)
+		{
+			Vec3b pixel = m_RGBframe.at<Vec3b>(Point(x, y));
+
+			functionToPerform(pixel);
+
+			m_RGBframe.at<Vec3b>(Point(x, y)) = pixel;
+		}
+	}
 }
