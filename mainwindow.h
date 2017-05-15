@@ -14,7 +14,8 @@ class MainWindow : public QMainWindow
 public:
 	MainWindow(QWidget *parent = 0);
 	~MainWindow();
-
+signals:
+	void togglePlayer();
 private slots:
 	//Display video m_frame in player UI
 	void updatePlayerUI(QImage img);
